@@ -5,5 +5,5 @@
 	"requirements": [
 		{ "item": "copper", "amount": 30}
 	],
-	"category": "effect",
+	"category": "logic",
 }

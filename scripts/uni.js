@@ -4,7 +4,7 @@ var teamsGroup = [];
 
 const point = new Effect(30, e => {
     
-    Draw.color(Pal.accent);
+    Draw.color(e.color);
     Draw.alpha(e.fslope())
     
     Draw.rect(Core.atlas.find("[#624200]copper-uni-point"), e.x, e.y);
@@ -115,9 +115,14 @@ m.buildType = prov(() => extend(Building, {
         Groups.unit.each(cons(unit => unit.kill()))
     	
     })).size(40);
-        
+    
+    table.row()
+    
+    //new menu
 
     },
+    
+    
     loadTex(){
         
         this.spawnX = this.x;
@@ -143,7 +148,7 @@ m.buildType = prov(() => extend(Building, {
         
         if(this.timer.get(30)){
         
-        point.at(this.spawnX, this.spawnY)
+        point.at(this.spawnX, this.spawnY, this.team.color)
         
         }
         
