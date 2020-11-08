@@ -5,8 +5,8 @@ const d = extendContent(Wall, "dit", {
     setStats(){
         
     this.super$setStats();
-    this.stats.remove(BlockStat.health);
-    this.stats.add(BlockStat.health, "∞", "");
+    this.stats.remove(Stat.health);
+    this.stats.add(Stat.health, "∞", "");
     
   }
     
@@ -22,6 +22,6 @@ d.buildType = () => extendContent(Wall.WallBuild, d, {
             
         }
         
-    }
+    },
     
 }) 
