@@ -29,9 +29,6 @@ m.buildType = prov(() => extend(Building, {
     _spawnAddX: [0, 8, 0, -8],
     _spawnAddY: [8, 0, -8, 0],
     
-    _spawnX: 0,
-    _spawnY: 0,
-    
     addButtonTeam(i, table){
         
     
@@ -49,13 +46,14 @@ m.buildType = prov(() => extend(Building, {
         
     },
     
+    kill(){},
     addButtonUnit(b, table){
         
         table.button(new TextureRegionDrawable(unitsGroup.get(b).icon(Cicon.small)), Styles.clearFulli, 26, run(() => {
         
         //contentUnit = Vars.content.units().get(b);
         //set(this.spawnX, this.spawnY)
-        unitsGroup.get(b).spawn(this.team, this._spawnX, this._spawnY);
+        unitsGroup.get(b).spawn(this.team, this.spawnX, this.spawnY);
         
         /*unit = UnitTypes.dagger.create(this.getTeam());
         unit.set(this.x, this.y); 
@@ -69,9 +67,9 @@ m.buildType = prov(() => extend(Building, {
         table.button(new TextureRegionDrawable(Core.atlas.find(m.name + "-arroy-" + v)), 
     Styles.clearFulli, run(() => {
         
-        this._spawnX += this._spawnAddX[v];
+        this.spawnX += this._spawnAddX[v];
         
-        this._spawnY += this._spawnAddY[v]
+        this.spawnY += this._spawnAddY[v]
     	
     })).size(40);
         
@@ -106,7 +104,7 @@ m.buildType = prov(() => extend(Building, {
     table.row();
     
     //control
-        for(var v = 0; v < this.spawnAddX.length; v++){
+        for(var v = 0; v < this._spawnAddX.length; v++){
             
             this.addButtonControl(v, table);
             
@@ -128,8 +126,8 @@ m.buildType = prov(() => extend(Building, {
     
     loadTex(){
         
-        this._spawnX = this.x;
-        this._spawnY = this.y;
+        this.spawnX = this.x;
+        this.spawnY = this.y;
     
     },
     /*init(){
@@ -151,7 +149,7 @@ m.buildType = prov(() => extend(Building, {
         
         if(this.timer.get(30)){
         
-        point.at(this._spawnX, this._spawnY, this.team.color)
+        point.at(this.spawnX, this.spawnY, this.team.color)
         
         }
         

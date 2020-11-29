@@ -11,8 +11,9 @@ m.buildType = () => extend(Building, {
         
         var core = Vars.state.teams.closestCore(x, y, this.team)
         
-        var coreBlock = Vars.world.tileWorld(core.x, core.y)
-        
+        if(core != null && this != null){
+            
+        var coreBlock = Vars.world.tileWorld(core.x, core.y);
         for(var i = 0; i < Vars.content.items().size; i++){
             
             var item = Vars.content.items().get(i)
@@ -23,10 +24,36 @@ m.buildType = () => extend(Building, {
             
             }
             
-        }
+           };
+        };
+        
+    },
+    kill(){},
+    placed(){
+        
+        this.super$placed();
+        
+    },
+    buildConfiguration(table){
+        
+        table.button("бесконечные ресурсы", Icon.units, run(() => {
+            
+            if(Vars.state.rules.infiniteResources){
+                
+                Vars.state.rules.infiniteResources = false
+                
+            }
+            else{
+                
+                Vars.state.rules.infiniteResources = true
+                
+            };
+            
+        })).size(150, 60);
         
     },
     
 });
 
 m.update = true;
+m.configurable = true;

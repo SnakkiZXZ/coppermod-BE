@@ -1,4 +1,6 @@
-//const Eff = require("EffectsLib");
+const dia = require("diaL");
+var mTeamGroup = [];
+const playerBust = new StatusEffect("eeeeee");
 const effectRadius = new Effect(90, e => {
     
     Draw.color(e.color, Color.white, e.fin());
@@ -10,35 +12,123 @@ const effectRadius = new Effect(90, e => {
 
 const p = extendContent(Block, "pro", {
     
+    init(){
+        this.super$init();
+        mTeamGroup = Team.all;
+    }
+    
 });
 
 p.update = true;
 p.targetable = false;
 p.solid = false;
+//p.configurable = true;
 //p.layer = Layer.power;
 p.buildType = () => extend(Building, {
-    
     radius: 0,
     range: 100,
     bust: 1,
+    pRealB: 1,
+    pDamgB: 1,
     healting: true,
     pHeal: false,
     busting: false,
     shelded: false,
+    uHeal: false,
+    uDamaged: false,
     heat: 0,
+    _team: Team.crux,
+    
+    write(write){
+        this.super$write(write);
+        
+        /*write.s(this.range);
+        write.s(this.bust);
+        write.s(this.healting ? 1:0);
+        write.s(this.busting ? 1:0);
+        write.s(this.shelded ? 1:0);
+        write.s(this.pHeal ? 1:0);
+        write.s(this.uHeal ? 1:0);
+        write.s(this.uDamaged ? 1:0);*/
+        write.f(this.range);
+        write.f(this.bust);
+        write.f(this.pRealB);
+        write.f(this.pDamgB);
+        write.bool(this.healting);
+        write.bool(this.busting);
+        write.bool(this.shelded);
+        write.bool(this.pHeal);
+        write.bool(this.uHeal);
+        write.bool(this.uDamaged);
+        write.s(this._team.id)
+        
+    },
+    
+    read(read, revision){
+        this.super$read(read, revision);
+        /*this.range = read.s();
+        this.bust = read.s();
+        this.healting = read.s() == 1 ? true : false;
+        this.busting = read.s() == 1 ? true : false;
+        this.shelded = read.s() == 1 ? true : false;
+        this.pHeal = read.s() == 1 ? true : false;
+        this.uHeal = read.s() == 1 ? true : false;
+        this.uDamaged = read.s() == 1 ? true : false;*/
+        //this.bust = arr[1];
+        
+        this.range = read.f();
+        this.bust = read.f();
+        this.pRealB = read.f();
+        this.pDamgB = read.f();
+        this.healting = read.bool();
+        this.busting = read.bool();
+        this.shelded = read.bool();
+        this.pHeal = read.bool();
+        this.uHeal = read.bool();
+        this.uDamaged = read.bool();
+        this._team = Team.get(read.s());
+        
+    },
+    
+    /*
+    read(Reads read, byte revision){
+            super.read(read, revision);
+            outputItem = content.item(read.s());
+    */
+    
+    mTeamButtonAdd(table, b){
+        
+        table.button(cons(bat => {
+                
+				bat.left();
+				bat.image(new TextureRegionDrawable(Core.atlas.find("[#624200]copper-saw-picker"))).size(40).pad(2).color(mTeamGroup[b].color);
+				
+			}), run(() => {
+				
+				this._team = mTeamGroup[b];
+				
+			})).pad(2);
+			
+			if(b % 3 == 2){
+			    
+			    table.row();
+			    
+			};
+        
+    },
+    
+    /*buildConfiguration(table) {
+        table.button(new TextureRegionDrawable(Core.atlas.find("error")), 
+    Styles.clearFulli, 26, run(() => {
+        
+        this.tapped()
+    	
+    })).size(40);
+    },*/
     
     loaded(){
         
         
-        
-    },
-    
-    title(d, text){
-        d.row();
-        d.add(text).color(Pal.accent).padBottom(10).expandX().colspan(6);
-        d.row();
-        d.image().color(Pal.accent).expandX().height(3).fillX().colspan(6);
-        d.row();
         
     },
     
@@ -65,27 +155,35 @@ p.buildType = () => extend(Building, {
         
         const tabler = new Table();
         const checkA = new CheckBox("Ремонтный проектор")
-        checkA.checked = this.healting
+        checkA.checked = this.healting;
         const checkB = new CheckBox("Ускоряющий проектор");
-        checkB.checked = this.busting
+        checkB.checked = this.busting;
         const checkC = new CheckBox("Щитовой проектор");
-        checkC.checked = this.shelded
-        const checkP = new CheckBox("Авторемонт игрока")
-        checkP.checked = this.pHeal
+        checkC.checked = this.shelded;
+        const checkP = new CheckBox("Авторемонт игрока");
+        checkP.checked = this.pHeal;
+        const checkU = new CheckBox("Авторемонт юнитов");
+        checkU.checked = this.uHeal;
+        const checkUD = new CheckBox("Уничтожение юнитов");
+        checkUD.checked = this.uDamaged;
+        //const checkG = new CheckBox("Бесконечные ресурсы")
+        //checkG.checked = Vars.state.rules.infiniteResources
         const textt = new TextField(this.range);
         const texth = new TextField(this.bust);
+        const textpd = new TextField(this.pDamgB);
+        const textpr = new TextField(this.pRealB);
         
         tabler.pane(cons(table => {
             
             //table settings
                 
             table.add(new Label("Радиус действия")).left;
-            table.add(textt).fillX().addInputDialog();
+            dia.textFilder(table, textt, 9999).fillX();
             
             table.row();
             
             table.add(new Label("Множитель ускорения")).left;
-            table.add(texth).fillX().width(100).addInputDialog();
+            dia.textFilder(table, texth, 9999).fillX();
                 
             table.row();
             table.add(checkA).colspan(2).left;
@@ -96,8 +194,35 @@ p.buildType = () => extend(Building, {
             table.row();
             table.add(checkC).colspan(2).left;
             
+            //player settings  ///////////////////////////
+            dia.title(table, "игрок и юниты", 2);
             table.row();
+            table.add(new Label("множитель урона")).left;
+            dia.textFilder(table, textpd, 9999).fillX();
+            table.row();
+            table.add(new Label("Множитель перезарядки")).left;
+            dia.textFilder(table, textpr, 9999).fillX();
+            table.row();
+            
             table.add(checkP).colspan(2).left;
+            table.row();
+            table.add(checkU).colspan(2).left;
+            table.row();
+            table.add(checkUD).colspan(2).padBottom(10).left;
+            table.row();
+            
+            table.pane(cons(tabl => {
+                
+                for(var c = 0; c < mTeamGroup.length; c++){
+                    
+                    this.mTeamButtonAdd(tabl, c)
+                    
+                };
+                
+            })).maxHeight(140).maxWidth(300).colspan(2).expandX();
+            
+            //table.row();
+            //table.add(checkG).colspan(2).left;
             //end table
         
         })).maxHeight(600).maxWidth(500).minHeight(300);
@@ -113,10 +238,15 @@ p.buildType = () => extend(Building, {
             
             this.range = textt.getText();
             this.bust = texth.getText();
+            this.pDamgB = textpd.getText();
+            this.pRealB = textpr.getText();
             this.healting = checkA.isChecked();
             this.busting = checkB.isChecked();
             this.shelded = checkC.isChecked();
             this.pHeal = checkP.isChecked();
+            this.uHeal = checkU.isChecked();
+            this.uDamaged = checkUD.isChecked();
+            //Vars.state.rules.infiniteResources = checkG.isChecked();
             
             effectRadius.at(this.x, this.y, this.range, this.team.color);
             
@@ -176,11 +306,37 @@ p.buildType = () => extend(Building, {
             Vars.player.unit().heal()
             
         };
+        //heal units
+        if(this.uHeal){
+            
+            Groups.unit.each(boolf(unit => unit.team == this.team), cons(unit => unit.heal()))
+            
+        };
+        //damage units
+        if(this.uDamaged){
+            
+            Groups.unit.each(boolf(unit => unit.team == this._team), cons(unit => unit.kill()))
+            
+        };
+        //player busting
+        playerBust.damageMultiplier = this.pDamgB;
+        playerBust.reloadMultiplier = this.pRealB;
+        playerBust.permanent = true;
+        if(this.pDamgB > 1 && Vars.player.unit() != null || this.pRealB > 1 && Vars.player.unit() != null){
+            
+            var player = Vars.player.unit();
+            if(player.team == this.team){
+                
+                player.apply(playerBust);
+                
+            }
+            
+        };
         
         //heating
         if(this.heat > 0){
             
-            this.heat -= 0.02
+            this.heat -= 0.03
             
         }
         else if(this.heat < 0){

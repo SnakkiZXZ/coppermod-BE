@@ -11,10 +11,12 @@ const d = extendContent(Wall, "dit", {
   }
     
 });
-d.update = true
+d.update = true;
+d.insulated = true;
+d.absorbLasers = true;
 d.buildType = () => extendContent(Wall.WallBuild, d, {
     
-    update(){
+    /*update(){
         
         if(this.health < this.maxHealth){
             
@@ -22,6 +24,27 @@ d.buildType = () => extendContent(Wall.WallBuild, d, {
             
         }
         
+    },*/
+    damage(amount){
+        if(this.team != Team.sharded && Vars.state.isCampaign()){
+            
+            this.super$damage(amount);
+            
+        };
+    },
+    kill(){
+        if(this.team != Team.sharded && Vars.state.isCampaign()){
+            
+            this.super$kill();
+            
+        };
+    },
+    killed(){
+        if(this.team != Team.sharded && Vars.state.isCampaign()){
+            
+            this.super$killed();
+            
+        };
     },
     
 }) 

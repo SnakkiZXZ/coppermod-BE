@@ -1,14 +1,16 @@
 //const Eff = require("EffectsLib");
 var unitGroup = [];
 var teamGroup = [];
+var mTeamGroup = [];
 const s = extendContent(Block, "spawner", {
     
     init(){
         
         this.super$init();
         
-        unitGroup = Vars.content.units()
-        teamGroup = Team.baseTeams
+        unitGroup = Vars.content.units();
+        teamGroup = Team.baseTeams;
+        mTeamGroup = Team.all;
     },
     
 });
@@ -23,6 +25,28 @@ s.buildType = () => extend(Building, {
     check: false,
     triger: 60,
     teamG: Team.sharded,
+    
+    write(write){
+        
+        this.super$write(write);
+        write.f(this.triger);
+        write.bool(this.check);
+        write.s(this.teamG.id);
+        
+    },
+    read(read, revision){
+        
+        this.super$read(read, revision);
+        this.triger = read.f();
+        this.check = read.bool();
+        this.teamG = Team.get(read.s());
+        for(var i = 0; i < unitGroup.size; i++){
+            
+            this.groupin[i] = new TextField("0")
+            
+        };
+        
+    },
     
     loaded(){
         
@@ -52,11 +76,11 @@ s.buildType = () => extend(Building, {
     
     teamCounter(table, b){
         
-        table.button(new TextureRegionDrawable(Core.atlas.find("[#624200]copper-uni-" + b)), Styles.clearTogglePartiali, 37, run(() => {
+        table.button(new TextureRegionDrawable(Core.atlas.find("[#624200]copper-uni-" + b)), /*Styles.clearTogglePartiali,*/ 37, run(() => {
         
         this.teamG = teamGroup[b]
     	
-    })).size(50);
+    })).size(50).color(teamGroup[b].color).pad(2);
         
     },
     unitCounter(table, b){
@@ -70,6 +94,55 @@ s.buildType = () => extend(Building, {
             
         }
         
+    },
+    
+    mTeamButtonAdd(table, b, dialog){
+        
+        table.button(cons(bat => {
+                
+				bat.left();
+				bat.image(new TextureRegionDrawable(Core.atlas.find("[#624200]copper-saw-picker"))).size(36).pad(2).color(mTeamGroup[b].color);
+				
+			}), run(() => {
+				
+				this.teamG = mTeamGroup[b];
+				dialog.hide();
+				
+			})).pad(2);
+        
+    },
+    
+    moreTeams(){
+        
+        const d = new BaseDialog("Прочие команды");
+        d.setFillParent(false);
+        
+        const tab = new Table();
+        
+        tab.pane(cons(table => {
+            
+        for(var i = 0; i < mTeamGroup.length; i++){
+            
+            this.mTeamButtonAdd(table, i, d)
+			
+			if(i % 5 == 4){
+			    
+			    table.row();
+			    
+			};
+            
+        };
+        })).maxHeight(700).maxWidth(500);
+        
+        d.buttons.button("отмена", run(() => {
+            
+            d.hide();
+            
+        }));
+        
+        d.cont.add(tab);
+        
+        d.show();
     },
     /*controlBut(table){
         
@@ -97,8 +170,9 @@ s.buildType = () => extend(Building, {
         
         const tabler = new Table();
         const checkB = new CheckBox("режим спаунера");
-        checkB.checked = this.check
-        const textt = new TextField(this.triger)
+        const textx = new TextField(Vars.state.rules.unitCap);
+        checkB.checked = this.check;
+        const textt = new TextField(this.triger);
         
         tabler.pane(cons(table => {
             
@@ -111,11 +185,31 @@ s.buildType = () => extend(Building, {
                 this.unitCounter(table, b)
             };
             
+            table.row();
+            table.add(new Label("Предел юнитов")).colspan(3);
+            table.add(textx).fillX().addInputDialog();
+            
             this.title(table, "команда");
             for(var z = 0; z < teamGroup.length; z++){
-                this.teamCounter(table, z)
+                this.teamCounter(table, z);
+                
             };
             
+            table.row();
+            
+            table.button("Больше команд", Icon.grid, run(() => {
+                    
+                    this.moreTeams();
+                    
+                })).colspan(3).width(250).height(80).padTop(10);
+            
+            /*table.button("больше команд", run(() => {
+                
+                
+                
+            })).colspan(6).fillX();*/
+            
+            //xy
             this.title(table, "координаты")
                 
                 table.add(new Label("координата X")).colspan(3);
@@ -124,16 +218,30 @@ s.buildType = () => extend(Building, {
                 table.add(new Label("координата Y")).colspan(3);
                 table.add(this.cordinate[1]).fillX().addInputDialog();
                 
-                table.add()
+                table.row()
+                
+                table.button("сбросить координаты", Icon.trash, run(() => {
+                    
+                    this.cordinate[0].setText(this.x / 8);
+                    this.cordinate[1].setText(this.y / 8);
+                    
+                })).colspan(3).width(250).height(80).padTop(10);
+                
+                table.button("Координаты игрока", Icon.units, run(() => {
+                    
+                    this.cordinate[0].setText(Mathf.floor(Vars.player.unit().x / 8));
+                    this.cordinate[1].setText(Mathf.floor(Vars.player.unit().y / 8));
+                    
+                })).colspan(3).width(250).height(80).padTop(10);
                 
             this.title(table, "спаунер");
-                table.add(checkB).colspan(4);
+                table.add(checkB).colspan(4).padTop(10);
                 table.row();
                 table.add(new Label("задержка")).colspan(3);
-                table.add(textt).fillX().addInputDialog()
+                table.add(textt).fillX().addInputDialog();
             //end table
         
-        })).maxHeight(600).maxWidth(500).minHeight(300);
+        })).maxHeight(700).maxWidth(500).minHeight(300);
         
         //dialog.<table/cont>.image().width(4).fillX().center();
         
@@ -149,6 +257,7 @@ s.buildType = () => extend(Building, {
             
             this.check = checkB.isChecked();
             this.triger = textt.getText();
+            Vars.state.rules.unitCap = textx.getText();
             
             if(!checkB.isChecked()){
             for(var k = 0; k < unitGroup.size; k++){
@@ -188,7 +297,7 @@ s.buildType = () => extend(Building, {
                 
                 for(var c = 0; c < this.groupin[k].getText(); c++){
                     
-                    unitGroup.get(k).spawn(this.team, this.coord.x * 8, this.coord.y * 8);
+                    unitGroup.get(k).spawn(this.teamG, this.coord.x * 8, this.coord.y * 8);
                     
                 }
                 
